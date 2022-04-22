@@ -8,6 +8,7 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -24,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     private LocationManager locationManager;
     private LocationListener listener;
-
+    private BroadCastGPS broadCastGPS;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +33,8 @@ public class MainActivity extends AppCompatActivity {
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        configure_location();
+        broadCastGPS = new BroadCastGPS();
+
 
         listener = new LocationListener() {
 
@@ -65,6 +67,27 @@ public class MainActivity extends AppCompatActivity {
                 configure_location();
             }
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(LocationManager.PROVIDERS_CHANGED_ACTION);
+            registerReceiver(broadCastGPS,intentFilter);
+            configure_location();
+        }
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && broadCastGPS != null){
+            unregisterReceiver(broadCastGPS);
+        }
+
     }
 
     private void configure_location(){
